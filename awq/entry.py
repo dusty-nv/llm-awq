@@ -22,6 +22,8 @@ parser.add_argument('--parallel', action='store_true',
                     help="enable model parallelism")
 parser.add_argument('--auto_parallel', action='store_true',
                     help="automatically set parallel and batch_size")
+parser.add_argument('--offload_folder', type=str, default='/tmp/huggingface',
+                    help="temp directory for loading large model weights")
 # quantization config
 parser.add_argument('--w_bit', type=int, default=None)
 parser.add_argument('--q_group_size', type=int, default=-1)
@@ -63,14 +65,15 @@ def build_model_and_enc(model_path):
 
     # all hf model
     config = AutoConfig.from_pretrained(model_path)
-    enc = AutoTokenizer.from_pretrained(model_path, use_fast=False, offload_folder='/tmp/huggingface')
+    enc = AutoTokenizer.from_pretrained(model_path, use_fast=False)
 
     if args.load_quant:  # directly load quantized weights
         # no need to really load the fp16 weights... just to get the model structure
         print("Loading pre-computed quantized weights...")
         with init_empty_weights():
             model = AutoModelForCausalLM.from_pretrained(model_path, config=config,
-                                                         torch_dtype=torch.float16)
+                                                         torch_dtype=torch.float16,
+                                                         offload_folder=args.offload_folder)
         real_quantize_model_weight(
             model, w_bit=args.w_bit, q_config=q_config, init_only=True)
         model = load_checkpoint_and_dispatch(
@@ -83,7 +86,7 @@ def build_model_and_enc(model_path):
         kwargs = {"device_map": "balanced", "torch_dtype": torch.float16}
 
         model = AutoModelForCausalLM.from_pretrained(
-            model_path, config=config, **kwargs)
+            model_path, config=config, offload_folder=args.offload_folder, **kwargs)
 
         if args.run_awq:
             awq_results = run_awq(
