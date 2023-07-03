@@ -63,7 +63,7 @@ def build_model_and_enc(model_path):
 
     # all hf model
     config = AutoConfig.from_pretrained(model_path)
-    enc = AutoTokenizer.from_pretrained(model_path, use_fast=False)
+    enc = AutoTokenizer.from_pretrained(model_path, use_fast=False, offload_folder='/tmp/huggingface')
 
     if args.load_quant:  # directly load quantized weights
         # no need to really load the fp16 weights... just to get the model structure
