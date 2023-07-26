@@ -1,16 +1,26 @@
 # AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration [[Paper](https://arxiv.org/abs/2306.00978)]
 
-**Efficient and accurate** low-bit weight quantization (INT3/4) for LLMs, supporting **instruction-tuned** models and **multi-modal** LMs. 
+**Efficient and accurate** low-bit weight quantization (INT3/4) for LLMs, supporting **instruction-tuned** models and **multi-modal** LMs.
 
 ![overview](figures/overview.png)
 
 The current release supports: 
 
 - AWQ search for accurate quantization. 
-- Pre-computed AWQ model zoo for LLMs (LLaMA, OPT, Vicuna, LLaVA; load to generate quantized weights).
+- Pre-computed AWQ model zoo for LLMs (LLaMA-1&2, OPT, Vicuna, LLaVA; load to generate quantized weights).
 - Memory-efficient 4-bit Linear in PyTorch.
 - Efficient CUDA kernel implementation for fast inference (support context and decoding stage).
 - Examples on 4-bit inference of an instruction-tuned model (Vicuna) and multi-modal LM (LLaVA).
+
+![TinyChat on RTX 4090: W4A16 is 2.3x faster than FP16](./tinychat/figures/4090_example.gif)
+
+Check out [TinyChat](tinychat), which delievers 2.3x faster inference performance for the **LLaMA-2** chatbot on RTX 4090!
+
+
+## News
+- [2023/07] 🔥 We released **TinyChat**, an efficient and minimal chatbot interface based on AWQ. TinyChat enables efficient LLM inference on both cloud and edge GPUs. LLama-2-chat models are supported! Check out our implementation [here](tinychat).
+- [2023/07] 🔥 We added AWQ support and pre-computed search results for Llama-2 models (7B & 13B). Checkout our model zoo [here](https://huggingface.co/datasets/mit-han-lab/awq-model-zoo)!
+- [2023/07] We extended the support for more LLM models including MPT, Falcon, and BLOOM. 
 
 ## Contents
 
@@ -36,7 +46,13 @@ pip install --upgrade pip  # enable PEP 660 support
 pip install -e .
 ```
 
-3. Install efficient W4A16 (4-bit weight, 16-bit activation) CUDA kernel
+* For **edge devices** like Orin, before running the commands above, please:
+
+    1. Modify [pyproject.toml](pyproject.toml) by commenting out [this line](https://github.com/mit-han-lab/llm-awq/blob/3fce69061682fdd528824e5da3d03a8a8b545f2a/pyproject.toml#L17).
+    2. Manually install precompiled PyTorch binaries (>=2.0.0) from [NVIDIA](https://forums.developer.nvidia.com/t/pytorch-for-jetson/72048).
+    3. Set the appropriate Python version for conda environment (e.g., `conda create -n awq python=3.8 -y` for JetPack 5).
+  
+3. Install efficient W4A16 (4-bit weight, 16-bit activation) CUDA kernel and optimized FP16 kernels (e.g. layernorm, positional encodings).
 ```
 cd awq/kernels
 python setup.py install
@@ -55,10 +71,11 @@ The detailed support list:
 
 | Models | Sizes                       | INT4-g128 | INT3-g128 |
 | ------ | --------------------------- | --------- | --------- |
-| LLaMA  | 7B/13B/30B/65B              | ✅         | ✅         |
-| OPT    | 125m/1.3B/2.7B/6.7B/13B/30B | ✅         | ✅         |
-| Vicuna | 7B/13B                      | ✅         |           |
-| LLaVA  | 13B                         | ✅         |           |
+| LLaMA-2  | 7B/7B-chat/13B/13B-chat   | ✅         | ✅        |
+| LLaMA  | 7B/13B/30B/65B              | ✅         | ✅        |
+| OPT    | 125m/1.3B/2.7B/6.7B/13B/30B | ✅         | ✅        |
+| Vicuna-v1.1 | 7B/13B                 | ✅         |           |
+| LLaVA-v0 | 13B                       | ✅         |           |
 
 ## Examples
 

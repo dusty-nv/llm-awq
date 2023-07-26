@@ -3,16 +3,21 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CppExtensio
 
 extra_compile_args = {
     "cxx": ["-g", "-O3", "-fopenmp", "-lgomp", "-std=c++17"],
-    "nvcc": ["-O3", "-std=c++17", "-keep"],
+    "nvcc": ["-O3", "-std=c++17"],
 }
 
 setup(
-    name="f16s4_gemm",
+    name="awq_inference_engine",
     packages=find_packages(),
     ext_modules=[
         CUDAExtension(
-            name="f16s4_gemm",
-            sources=["pybind.cpp", "gemm_cuda_gen.cu"],
+            name="awq_inference_engine",
+            sources=[
+                "csrc/pybind.cpp", 
+                "csrc/quantization/gemm_cuda_gen.cu",
+                "csrc/layernorm/layernorm.cu",
+                "csrc/position_embedding/pos_encoding_kernels.cu"
+            ],
             extra_compile_args=extra_compile_args,
         ),
     ],
